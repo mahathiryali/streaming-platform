@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session 
-from .database import SessionLocal, engine 
-from . import models, crud
+from .database import SessionLocal, engine, Base
+from . import models, crud, schemas
 
-models.Base.metadata.create_all(bind=engine)
+
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
 
@@ -11,9 +13,6 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello, FastAPI!"}
 
-@app.post("/playback/event")
-def playback_event(event):
-    return {}
 
 def get_db(): 
     db = SessionLocal() 
@@ -22,6 +21,6 @@ def get_db():
     finally: 
         db.close() 
 
-@app.get("/users") 
-def read_users(db: Session = Depends(get_db)): 
-    return crud.get_users(db)
+@app.post("/playback/event", response_model=schemas.PlaybackStateResponse)
+def handle_event(event: schemas.ProcessPlaybackEvent, db: Session = Depends(get_db)):
+    return crud.process_playback_event(db, event)
