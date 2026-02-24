@@ -33,3 +33,41 @@ def process_playback_event(db: Session, event: schemas.ProcessPlaybackEvent):
             db.refresh(existing_state)
     
         return existing_state
+
+def get_playback_state(db: Session, user_id: int, content_id: int = None):
+    current_users = db.query(models.PlaybackState).filter(
+        models.PlaybackState.user_id == user_id
+    )
+    if current_users is not None:
+        current_users = current_users.filter(models.PlaybackState.content_id == content_id)
+    
+    return current_users.all()
+
+def continue_watching(db: Session, user_id: int):
+    results = db.query(models.PlaybackState, models.Content
+        ).join(
+        models.Content, models.PlaybackState.content_id == models.Content.id
+        ).filter(
+            models.PlaybackState.user_id == user_id
+        ).filter(
+            models.PlaybackState.position_seconds > 0   
+        ).filter(
+            models.PlaybackState.position_seconds < models.Content.duration_seconds
+        )
+
+    response = []
+
+    for playback, content in results:
+        progress_percent = (playback.position_seconds / content.duration_seconds) * 100
+
+        response.append({
+            "content_id": content.id,
+            "title": content.title,
+            "description": content.description,
+            "duration_seconds": content.duration_seconds,
+            "position_seconds": playback.position_seconds,
+            "progress_percent": round(progress_percent, 2)
+        })
+
+
+    return response

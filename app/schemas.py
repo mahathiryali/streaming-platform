@@ -25,3 +25,14 @@ class PlaybackStateResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ContinueWatchingItem(BaseModel):
+    content_id: int
+    title: str
+    description: str
+    duration_seconds: int
+    position_seconds: int
+    progress_percent: int
+
+    class Config:
+        orm_mode = True
