@@ -25,6 +25,7 @@ class Users(Base):
     id = Column(BIGINT, primary_key=True, index=True)
     email = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+    hashed_password = Column(String, nullable=False)
 
 class Content(Base):
     __tablename__ = "content"

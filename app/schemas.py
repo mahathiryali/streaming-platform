@@ -3,7 +3,6 @@ from datetime import datetime
 from uuid import UUID
 
 class ProcessPlaybackEvent(BaseModel):
-    user_id: int
     content_id: int
     event_type: str
     position_seconds: int
@@ -32,7 +31,15 @@ class ContinueWatchingItem(BaseModel):
     description: str
     duration_seconds: int
     position_seconds: int
-    progress_percent: int
+    progress_percent: float
 
     class Config:
         orm_mode = True
+
+class LoginItem(BaseModel):
+    access_token: str
+    token_type: str
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
