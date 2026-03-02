@@ -8,13 +8,14 @@ import {
     BoltIcon
   } from '@heroicons/react/24/outline';
 
+import { useNavigate } from 'react-router-dom';
+
   const navigation = [
-    { name: 'Home', href: '/', icon: HomeIcon },
+    { name: 'Home', href: '/home', icon: HomeIcon },
     { name: 'My Library', href: '/library', icon: InboxIcon },
     { name: 'Continue Watching', href: '/continue', icon: PlayIcon },
     { name: 'Browse', href: '/browse', icon: MagnifyingGlassIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
-    { name: 'Log Out', href: '', icon: ArrowLeftEndOnRectangleIcon}
   ];
 
   interface UserProps {
@@ -25,6 +26,14 @@ import {
   }
 
 function Sidebar({user}: UserProps) {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+        window.location.reload();
+    }
+
     return (
         <div className="flex h-screen w-64 flex-col bg-slate-900 text-white">
             <div className="flex h-20 items-center justify-center border-b border-slate-800">
@@ -42,6 +51,14 @@ function Sidebar({user}: UserProps) {
                     {item.name}
                 </a>
                 ))}
+                <a
+                    key="Log Out"
+                    onClick={handleLogout}
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-red-500 hover:bg-slate-800 hover:text-red-400 transition-colors cursor-pointer"
+                >
+                    <ArrowLeftEndOnRectangleIcon className="mr-3 h-6 w-6 flex-shrink-0" aria-hidden="true"/>
+                    Log Out
+                </a>
             </nav>
 
             <div className="border-t border-slate-800 p-4">
