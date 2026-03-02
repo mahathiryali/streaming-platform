@@ -6,10 +6,24 @@ from app.database import engine, Base
 from typing import List
 from app import models, crud, schemas, database
 from app.dependencies import get_current_user
+from fastapi.middleware.cors import CORSMiddleware
 
-Base.metadata.create_all(bind=engine)
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+origins = [
+    # "http://localhost:3000",
+    "http://localhost:5173", 
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():
@@ -49,3 +63,8 @@ def refresh_user_token(refresh: schemas.RefreshTokenRequest, db: Session = Depen
 @app.post("/auth/logout")
 def logout_user(refresh: schemas.RefreshTokenRequest, db: Session = Depends(database.get_db)):
     return crud.logout_user(db, refresh.refresh_token)
+
+@app.get("/content", response_model=List[schemas.ContentItem])
+def get_all_content(db: Session = Depends(database.get_db)):
+    results = db.query(models.Content).all()
+    return results

@@ -44,3 +44,14 @@ class RegisterRequest(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+class ContentItem(BaseModel):
+    id: int
+    title: str
+    description: str
+    video_url: str
+    thumbnail_url: str
+    duration_seconds: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

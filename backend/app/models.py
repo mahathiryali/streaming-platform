@@ -33,6 +33,8 @@ class Content(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
+    thumbnail_url = Column(String, nullable=False)
+    video_url = Column(String, nullable=False)
     duration_seconds = Column(Integer, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
