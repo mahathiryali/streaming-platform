@@ -30,6 +30,8 @@ class ContinueWatchingItem(BaseModel):
     duration_seconds: int
     position_seconds: int
     progress_percent: float
+    video_url: str
+    thumbnail_url: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -55,3 +57,17 @@ class ContentItem(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class FavoriteBase(BaseModel):
+    content_id: int
+
+class FavoriteCreate(FavoriteBase):
+    pass
+
+class Favorite(FavoriteBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

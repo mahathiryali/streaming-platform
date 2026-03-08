@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 from . import models, auth, schemas
 from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 def get_users(db: Session):
     return db.query(models.Users).all()
@@ -68,7 +72,9 @@ def continue_watching(db: Session, user_id: int):
             description = content.description,
             duration_seconds = content.duration_seconds,
             position_seconds = playback.position_seconds,
-            progress_percent = round(progress_percent, 2)
+            progress_percent = round(progress_percent, 2),
+            thumbnail_url=content.thumbnail_url,
+            video_url=content.video_url
             ))
 
     return response
@@ -236,3 +242,51 @@ def logout_user(db: Session, refresh_token: str):
     db.delete(db_token)
     db.commit()
     return {"message": "Logged out successfully"}
+
+def toggle_favorite(db: Session, user_id: int, content_id: int):
+    existing_fav = db.query(models.Favorite).filter(
+        models.Favorite.user_id == user_id,
+        models.Favorite.content_id == content_id
+    ).first()
+
+    if existing_fav:
+        # If it exists, remove it (Un-favorite)
+        db.delete(existing_fav)
+        db.commit()
+        return {"status": "removed", "content_id": content_id}
+    
+    new_fav = models.Favorite(user_id=user_id, content_id=content_id)
+    db.add(new_fav)
+    db.commit()
+    db.refresh(new_fav)
+    return {"status": "added", "content_id": content_id}
+
+def get_user_favorites(db: Session, user_id: int):
+    return db.query(models.Favorite).filter(models.Favorite.user_id == user_id).all()
+
+def get_recommendations(db: Session, user_id: int):
+    all_videos = db.query(models.Content).all()
+    fav_vids = db.query(models.Favorite).filter(models.Favorite.user_id == user_id).all()
+    fav_ids = [f.content_id for f in fav_vids]
+
+    if not fav_vids:
+        return all_videos[:5]
+    
+    df = pd.DataFrame([
+        {"id": v.id, "text": f"{v.title} {v.description}"} 
+        for v in all_videos
+    ])
+
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(df['text'])
+
+    fav_indices = df[df['id'].isin(fav_ids)].index
+    user_profile_matrix = tfidf_matrix[fav_indices].mean(axis=0)
+    user_profile = np.asarray(user_profile_matrix)
+
+    similarities = cosine_similarity(user_profile, tfidf_matrix).flatten()
+    df['score'] = similarities
+
+    recommended = df[~df['id'].isin(fav_ids)].sort_values('score', ascending=False)
+    top_ids = recommended['id'].head(5).tolist()
+    return db.query(models.Content).filter(models.Content.id.in_(top_ids)).all()

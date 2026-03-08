@@ -1,6 +1,5 @@
 import requests
 import os
-from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Content
 from dotenv import load_dotenv

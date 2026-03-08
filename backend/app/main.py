@@ -7,6 +7,7 @@ from typing import List
 from app import models, crud, schemas, database
 from app.dependencies import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
+import json
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -68,3 +69,22 @@ def logout_user(refresh: schemas.RefreshTokenRequest, db: Session = Depends(data
 def get_all_content(db: Session = Depends(database.get_db)):
     results = db.query(models.Content).all()
     return results
+
+@app.post("/content/{content_id}/favorite")
+def favorite_video(content_id: int, db: Session = Depends(database.get_db), current_user: models.Users = Depends(get_current_user)):
+    return crud.toggle_favorite(db, user_id=current_user.id, content_id=content_id)
+
+@app.get("/users/me/favorites")
+def read_favorites(db: Session = Depends(database.get_db), current_user: models.Users = Depends(get_current_user)):
+    return crud.get_user_favorites(db, user_id=current_user.id)
+
+with open("app/data/processed_videos.json", "r") as f:
+    video_data_cache = json.load(f)
+
+@app.get("/videos")
+async def get_videos(): 
+    return video_data_cache
+
+@app.get("/videos/recommended")
+def recommend_videos(db: Session = Depends(database.get_db), current_user: models.Users = Depends(get_current_user)):
+    return crud.get_recommendations(db, user_id=current_user.id)
